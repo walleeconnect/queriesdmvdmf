@@ -1,0 +1,15 @@
+SELECT 
+    p.name AS ProcedureName,
+    STUFF((
+        SELECT ', ' + OBJECT_NAME(referenced_id) AS TableName
+        FROM sys.sql_expression_dependencies
+        WHERE referencing_id = p.object_id
+            AND referenced_class_desc = 'OBJECT_OR_COLUMN'
+        FOR XML PATH(''), TYPE
+    ).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS TablesUsed
+FROM 
+    sys.procedures p
+WHERE 
+    OBJECTPROPERTYEX(p.object_id, 'IsProcedure') = 1
+ORDER BY 
+    p.name;
