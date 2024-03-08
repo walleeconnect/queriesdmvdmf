@@ -13,3 +13,25 @@ WHERE
     OBJECTPROPERTYEX(p.object_id, 'IsProcedure') = 1
 ORDER BY 
     p.name;
+********************************
+DECLARE @tableName NVARCHAR(255)
+DECLARE @sql NVARCHAR(MAX)
+
+DECLARE tableCursor CURSOR FOR
+SELECT QUOTENAME(s.name) + '.' + QUOTENAME(t.name) AS TableName
+FROM sys.tables t
+INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+
+OPEN tableCursor
+FETCH NEXT FROM tableCursor INTO @tableName
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    SET @sql = 'EXEC sp_depends ' + @tableName
+    EXEC sp_executesql @sql
+
+    FETCH NEXT FROM tableCursor INTO @tableName
+END
+
+CLOSE tableCursor
+DEALLOCATE tableCursor
